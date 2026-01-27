@@ -166,6 +166,8 @@ Player* TicTacToe::checkForWinner()
     // if you find a winning triple, return the player who owns that triple
     // otherwise return nullptr
 
+    static int winningCombinations[8][3] = {{0,1,2}, {3,4,5}, {6,7,8}, {0,3,6},
+                                            {1,4,7}, {2,5,8}, {0,4,8}, {2,4,6}};
     // Hint: Consider using an array to store the winning combinations
     // to avoid repetitive code
     return nullptr;
@@ -176,6 +178,7 @@ bool TicTacToe::checkForDraw()
     // is the board full with no winner?
     // if any square is empty, return false
     // otherwise return true
+    if (stateString().find('0') == std::string::npos) return true;
     return false;
 }
 
@@ -198,6 +201,7 @@ std::string TicTacToe::stateString() const
     // each character should be '0' for empty, '1' for player 1 (X), and '2' for player 2 (O)
     // the order should be left-to-right, top-to-bottom
     // for example, the starting state is "000000000"
+    std::string state = "000000000";
     // if player 1 has placed an X in the top-left and player 2 an O in the center, the state would be "100020000"
     // you can build the string using a loop and the to_string function
     // for example, to convert an integer to a string, you can use std::to_string(1) which returns "1"
@@ -206,7 +210,16 @@ std::string TicTacToe::stateString() const
     // remember that player numbers are zero-based, so add 1 to get '1' or '2'
     // if the bit is null, add '0' to the string
     // finally, return the constructed string
-    return "000000000";
+    for (int y = 0; y < Game::_gameOptions.rowY; y++) {
+        for (int x = 0; x < Game::_gameOptions.rowX; x++) {
+            Bit* squareState = _grid[y][x].bit();
+            if (squareState != nullptr) {
+                int playerNum = squareState->getOwner()->playerNumber() + 1;
+                state[y * 3 + x] = playerNum + '0';
+            }
+        }
+    }
+    return state;
 }
 
 //
@@ -235,6 +248,15 @@ void TicTacToe::setStateString(const std::string &s)
     // loop through the 3x3 array and set each square accordingly
     // the string should always be valid, so you don't need to check its length or contents
     // but you can assume it will always be 9 characters long and only contain '0', '1', or '2'
+
+    for (int i = 0; i < 9; i++) {
+        int playerNumber = s[i] - '0';
+        Bit* piece = nullptr;
+        if (playerNumber > 0) {
+            Bit* piece = PieceForPlayer(playerNumber-1);
+        }
+        _grid[i / 3][i % 3].setBit(piece);
+    }
 }
 
 
