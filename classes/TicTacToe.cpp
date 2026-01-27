@@ -58,6 +58,23 @@ void TicTacToe::setUpBoard()
     // then we need to setup our 3x3 array in _grid with the correct position of the square, and load the "square.png" sprite for each square
     // we will use the initHolder function on each square to do this
     // finally we should call startGame to get everything going
+    
+
+    // Call setNumberOfPlayers to 2
+    Game::setNumberOfPlayers(2);
+    // set up the game options so the mouse knows to draw a 3x3 grid
+    // set rowX and rowY in _gameOptions to 3
+    Game::_gameOptions.rowX = 3;
+    Game::_gameOptions.rowY = 3;
+    // we need to setup our 3x3 array in _grid with the correct position of the square, and load the "square.png" sprite for each square
+    // we will use the initHolder function on each square to do this
+    for (int i = 0; i < Game::_gameOptions.rowX; i++) {
+        for (int j = 0; j < Game::_gameOptions.rowY; j++) {
+            _grid[i][j].initHolder(ImVec2((float)i * 100.0f, (float)j * 100.0f + 20.0f), "square.png", i, j);
+        }
+    }
+    // finally we should call startGame to get everything going
+    Game::startGame();
 }
 
 //
@@ -67,20 +84,27 @@ bool TicTacToe::actionForEmptyHolder(BitHolder *holder)
 {
     // 1) Guard clause: if holder is nullptr, fail fast.
     //    (Beginner hint: always check pointers before using them.)
-    //    if (!holder) return false;
-
+    if (!holder) return false; // true that... many a nights I spent in community college toiling over code
+                               // for this exact reason :')
     // 2) Is it actually empty?
     //    Ask the holder for its current Bit using the bit() function.
     //    If there is already a Bit in this holder, return false.
 
+    if (holder->bit() != nullptr) return false;
+
     // 3) Place the current player's piece on this holder:
     //    - Figure out whose turn it is (getCurrentPlayer()->playerNumber()).
+    int currentPlayerIndex = getCurrentPlayer()->playerNumber();
+    if (currentPlayerIndex != HUMAN_PLAYER && currentPlayerIndex != AI_PLAYER) return false;
     //    - Create a Bit via PieceForPlayer(currentPlayerIndex).
+    Bit* newBit = PieceForPlayer(currentPlayerIndex);
     //    - Position it at the holder's position (holder->getPosition()).
+    ImVec2 holderPos = holder->getPosition();
+    newBit->Sprite::moveTo(holderPos);
     //    - Assign it to the holder: holder->setBit(newBit);
-
+    holder->setBit(newBit);
     // 4) Return whether we actually placed a piece. true = acted, false = ignored.
-    return false; // replace with true if you complete a successful placement    
+    return true; // replace with true if you complete a successful placement    
 }
 
 bool TicTacToe::canBitMoveFrom(Bit *bit, BitHolder *src)
