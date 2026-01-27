@@ -126,6 +126,11 @@ void TicTacToe::stopGame()
 {
     // clear out the board
     // loop through the 3x3 array and call destroyBit on each square
+    for (int i = 0; i < Game::_gameOptions.rowX; i++) {
+        for (int j = 0; j < Game::_gameOptions.rowY; j++) {
+            _grid[i][j].destroyBit();
+        }
+    }
 }
 
 //
@@ -134,11 +139,12 @@ void TicTacToe::stopGame()
 Player* TicTacToe::ownerAt(int index ) const
 {
     // index is 0..8, convert to x,y using:
-    // y = index / 3
-    // x = index % 3 
+    int y = index / 3;
+    int x = index % 3; 
     // if there is no bit at that location (in _grid) return nullptr
+    if (_grid[y][x].bit() == nullptr) return nullptr;
     // otherwise return the owner of the bit at that location using getOwner()
-    return nullptr;
+    return _grid[y][x].bit()->getOwner();
 }
 
 Player* TicTacToe::checkForWinner()
