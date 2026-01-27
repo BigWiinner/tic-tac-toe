@@ -43,7 +43,7 @@ Bit* TicTacToe::PieceForPlayer(const int playerNumber)
 {
     // depending on playerNumber load the "x.png" or the "o.png" graphic
     Bit *bit = new Bit();
-    bit->LoadTextureFromFile(playerNumber == 1 ? "x.png" : "o.png");
+    bit->LoadTextureFromFile(playerNumber == 1 ? "o.png" : "x.png");
     bit->setOwner(getPlayerAt(playerNumber));
     return bit;
 }
@@ -68,9 +68,9 @@ void TicTacToe::setUpBoard()
     Game::_gameOptions.rowY = 3;
     // we need to setup our 3x3 array in _grid with the correct position of the square, and load the "square.png" sprite for each square
     // we will use the initHolder function on each square to do this
-    for (int i = 0; i < Game::_gameOptions.rowX; i++) {
-        for (int j = 0; j < Game::_gameOptions.rowY; j++) {
-            _grid[i][j].initHolder(ImVec2((float)i * 100.0f, (float)j * 100.0f + 20.0f), "square.png", i, j);
+    for (int y = 0; y < Game::_gameOptions.rowY; y++) {
+        for (int x = 0; x < Game::_gameOptions.rowX; x++) {
+            _grid[y][x].initHolder(ImVec2((float)x * 100.0f, (float)y * 100.0f + 20.0f), "square.png", x, y);
         }
     }
     // finally we should call startGame to get everything going
@@ -126,9 +126,9 @@ void TicTacToe::stopGame()
 {
     // clear out the board
     // loop through the 3x3 array and call destroyBit on each square
-    for (int i = 0; i < Game::_gameOptions.rowX; i++) {
-        for (int j = 0; j < Game::_gameOptions.rowY; j++) {
-            _grid[i][j].destroyBit();
+    for (int y = 0; y < Game::_gameOptions.rowY; y++) {
+        for (int x = 0; x < Game::_gameOptions.rowX; x++) {
+            _grid[y][x].destroyBit();
         }
     }
 }
