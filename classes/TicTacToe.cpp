@@ -70,7 +70,7 @@ void TicTacToe::setUpBoard()
     // we will use the initHolder function on each square to do this
     for (int y = 0; y < Game::_gameOptions.rowY; y++) {
         for (int x = 0; x < Game::_gameOptions.rowX; x++) {
-            _grid[y][x].initHolder(ImVec2((float)x * 100.0f, (float)y * 100.0f + 20.0f), "square.png", x, y);
+            _grid[y][x].initHolder(ImVec2((float)x * 100.0f + 24.0f, (float)y * 100.0f + 36.0f), "square.png", x, y);
         }
     }
     // finally we should call startGame to get everything going
@@ -166,8 +166,15 @@ Player* TicTacToe::checkForWinner()
     // if you find a winning triple, return the player who owns that triple
     // otherwise return nullptr
 
-    static int winningCombinations[8][3] = {{0,1,2}, {3,4,5}, {6,7,8}, {0,3,6},
+    static const int winningCombinations[8][3] = {{0,1,2}, {3,4,5}, {6,7,8}, {0,3,6},
                                             {1,4,7}, {2,5,8}, {0,4,8}, {2,4,6}};
+
+    for (int i = 0; i < 8; i++) {
+        Player* combo = ownerAt(winningCombinations[i][0]);
+        if (combo != nullptr && combo == ownerAt(winningCombinations[i][1]) && combo == ownerAt(winningCombinations[i][2])) {
+            return combo;
+        }
+    }
     // Hint: Consider using an array to store the winning combinations
     // to avoid repetitive code
     return nullptr;
@@ -250,12 +257,14 @@ void TicTacToe::setStateString(const std::string &s)
     // but you can assume it will always be 9 characters long and only contain '0', '1', or '2'
 
     for (int i = 0; i < 9; i++) {
+        int y = i / 3;
+        int x = i % 3;
         int playerNumber = s[i] - '0';
         Bit* piece = nullptr;
         if (playerNumber > 0) {
             Bit* piece = PieceForPlayer(playerNumber-1);
         }
-        _grid[i / 3][i % 3].setBit(piece);
+        _grid[y][x].setBit(piece);
     }
 }
 
