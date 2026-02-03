@@ -275,34 +275,6 @@ void TicTacToe::setStateString(const std::string &s)
     }
 }
 
-
-//
-// this is the function that will be called by the AI
-//
-void TicTacToe::updateAI() 
-{
-    int bestScore = -1000;
-    int bestMove = -1;
-    std::string state = stateString();
-
-    for (size_t i = 0; i < state.length(); i++) {
-        if (state[i] == '0') {
-            state[i] = '2';
-            int score = -negamax(state, 2, 0, 0, HUMAN_PLAYER);
-            state[i] = '0';
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = i;
-            }
-        }
-    }
-
-    if (bestMove != -1) {
-        actionForEmptyHolder(&_grid[bestMove / 3][bestMove % 3]);
-        endTurn();
-    }
-}
-
 int AICheckForWinner(const std::string& state) {
     static const int winningCombinations[8][3] = {{0,1,2}, {3,4,5}, {6,7,8}, {0,3,6},
                                             {1,4,7}, {2,5,8}, {0,4,8}, {2,4,6}};
@@ -318,11 +290,14 @@ int AICheckForWinner(const std::string& state) {
     return 0;
 }
 
-
+    // Negamax with alpha - beta tree pruning
+    // Adapted from Wikipedia the G.O.A.T.
+    // https://en.wikipedia.org/wiki/Negamax
+    // As well as from Professor Graeme Devine (also the G.O.A.T.)'s lecture
 int TicTacToe::negamax(std::string& state, int depth, int alpha, int beta, int player) {
     int score = AICheckForWinner(state);
-    if (score != 0) {
-        return -(score - depth);
+    if (score != 0 || depth == 0) {
+        return -(score + depth);
     }
 
     if (state.find('0') == std::string::npos) return 0; // draw state
@@ -331,13 +306,47 @@ int TicTacToe::negamax(std::string& state, int depth, int alpha, int beta, int p
     for (size_t i = 0; i < state.length(); i++) {
         if (state[i] == '0') {
             state[i] = player == HUMAN_PLAYER ? '1' : '2';
-            int val = -negamax(state, depth + 1, -beta, -alpha, -player);
+            int val = -negamax(state, depth - 1, -beta, -alpha, -player);
             state[i] = '0';
             if (val > bestScore) {
                 bestScore = val;
             }
+            if (val > alpha) {
+                alpha = val;
+            }
+            if (alpha >= beta) break;
         }
     }
     return bestScore;
 }
 
+
+//
+// this is the function that will be called by the AI
+//
+void TicTacToe::updateAI() 
+{
+    int bestScore = -1000;
+    int bestMove = -1;
+    std::string state = stateString();
+
+    int recursiveCount = 0;
+
+    for (size_t i = 0; i < state.length(); i++) {
+        if (state[i] == '0') {
+            state[i] = '2';
+            int score = -negamax(state, 9, -10000, 10000, HUMAN_PLAYER);
+            state[i] = '0';
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = i;
+            }
+        }
+    }
+
+    if (bestMove != -1) {
+        actionForEmptyHolder(&_grid[bestMove / 3][bestMove % 3]);
+        std::cout << recursiveCount << std::endl;
+        endTurn();
+    }
+}
