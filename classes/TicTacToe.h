@@ -30,6 +30,7 @@ public:
 
 	void        updateAI() override;
     bool        gameHasAI() override { return true; }
+    int         negamax(std::string& s, int depth, int alpha, int beta, int player);
     BitHolder &getHolderAt(const int x, const int y) override { return _grid[y][x]; }
 private:
     Bit *       PieceForPlayer(const int playerNumber);

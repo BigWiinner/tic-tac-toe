@@ -25,7 +25,7 @@
 // -----------------------------------------------------------------------------
 
 const int AI_PLAYER   = 1;      // index of the AI player (O)
-const int HUMAN_PLAYER= 0;      // index of the human player (X)
+const int HUMAN_PLAYER= -1;      // index of the human player (X)
 
 TicTacToe::TicTacToe()
 {
@@ -43,8 +43,8 @@ Bit* TicTacToe::PieceForPlayer(const int playerNumber)
 {
     // depending on playerNumber load the "x.png" or the "o.png" graphic
     Bit *bit = new Bit();
-    bit->LoadTextureFromFile(playerNumber == 1 ? "o.png" : "x.png");
-    bit->setOwner(getPlayerAt(playerNumber));
+    bit->LoadTextureFromFile(playerNumber == AI_PLAYER ? "o.png" : "x.png");
+    bit->setOwner(getPlayerAt(playerNumber == AI_PLAYER ? 1 : 0));
     return bit;
 }
 
@@ -73,6 +73,11 @@ void TicTacToe::setUpBoard()
             _grid[y][x].initHolder(ImVec2((float)x * 100.0f + 24.0f, (float)y * 100.0f + 36.0f), "square.png", x, y);
         }
     }
+
+    if (gameHasAI()) {
+        setAIPlayer(AI_PLAYER);
+    }
+
     // finally we should call startGame to get everything going
     Game::startGame();
 }
@@ -94,17 +99,19 @@ bool TicTacToe::actionForEmptyHolder(BitHolder *holder)
 
     // 3) Place the current player's piece on this holder:
     //    - Figure out whose turn it is (getCurrentPlayer()->playerNumber()).
-    int currentPlayerIndex = getCurrentPlayer()->playerNumber();
-    if (currentPlayerIndex != HUMAN_PLAYER && currentPlayerIndex != AI_PLAYER) return false;
+    int currentPlayerIndex = getCurrentPlayer()->playerNumber() == 0 ? HUMAN_PLAYER : AI_PLAYER;
     //    - Create a Bit via PieceForPlayer(currentPlayerIndex).
     Bit* newBit = PieceForPlayer(currentPlayerIndex);
-    //    - Position it at the holder's position (holder->getPosition()).
-    ImVec2 holderPos = holder->getPosition();
-    newBit->Sprite::moveTo(holderPos);
-    //    - Assign it to the holder: holder->setBit(newBit);
-    holder->setBit(newBit);
+    if (newBit) {
+        //    - Position it at the holder's position (holder->getPosition()).
+        ImVec2 holderPos = holder->getPosition();
+        newBit->setPosition(holderPos);
+        //    - Assign it to the holder: holder->setBit(newBit);
+        holder->setBit(newBit);
+        return true;
+    }
     // 4) Return whether we actually placed a piece. true = acted, false = ignored.
-    return true; // replace with true if you complete a successful placement    
+    return false; // replace with true if you complete a successful placement    
 }
 
 bool TicTacToe::canBitMoveFrom(Bit *bit, BitHolder *src)
@@ -274,6 +281,63 @@ void TicTacToe::setStateString(const std::string &s)
 //
 void TicTacToe::updateAI() 
 {
-    // we will implement the AI in the next assignment!
+    int bestScore = -1000;
+    int bestMove = -1;
+    std::string state = stateString();
+
+    for (size_t i = 0; i < state.length(); i++) {
+        if (state[i] == '0') {
+            state[i] = '2';
+            int score = -negamax(state, 2, 0, 0, HUMAN_PLAYER);
+            state[i] = '0';
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = i;
+            }
+        }
+    }
+
+    if (bestMove != -1) {
+        actionForEmptyHolder(&_grid[bestMove / 3][bestMove % 3]);
+        endTurn();
+    }
+}
+
+int AICheckForWinner(const std::string& state) {
+    static const int winningCombinations[8][3] = {{0,1,2}, {3,4,5}, {6,7,8}, {0,3,6},
+                                            {1,4,7}, {2,5,8}, {0,4,8}, {2,4,6}};
+
+    for (int i = 0; i < 8; i++) {
+        if (state[winningCombinations[i][0]] != '0') {
+            if (state[winningCombinations[i][0]] == state[winningCombinations[i][1]] && state[winningCombinations[i][0]] == state[winningCombinations[i][2]]) {
+                return 10;
+            }
+        }
+    }
+    
+    return 0;
+}
+
+
+int TicTacToe::negamax(std::string& state, int depth, int alpha, int beta, int player) {
+    int score = AICheckForWinner(state);
+    if (score != 0) {
+        return -(score - depth);
+    }
+
+    if (state.find('0') == std::string::npos) return 0; // draw state
+
+    int bestScore = -1000;
+    for (size_t i = 0; i < state.length(); i++) {
+        if (state[i] == '0') {
+            state[i] = player == HUMAN_PLAYER ? '1' : '2';
+            int val = -negamax(state, depth + 1, -beta, -alpha, -player);
+            state[i] = '0';
+            if (val > bestScore) {
+                bestScore = val;
+            }
+        }
+    }
+    return bestScore;
 }
 
